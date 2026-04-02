@@ -601,12 +601,12 @@ serve(async (req) => {
             }
           }
           
-          // Schedule reveal SMS 2 minutes after call end (only if call lasted >= 30 seconds)
+          // Schedule reveal SMS 1 minute after call end (only if call lasted >= 30 seconds)
           const REVEAL_SMS_MIN_DURATION = 30;
           const shouldScheduleRevealSms = wasAnswered && !isFailed && durationSeconds >= REVEAL_SMS_MIN_DURATION;
           
           if (shouldScheduleRevealSms) {
-            const scheduledAt = new Date(Date.now() + 2 * 60 * 1000).toISOString();
+            const scheduledAt = new Date(Date.now() + 1 * 60 * 1000).toISOString();
             console.log(`=== SCHEDULING REVEAL SMS for ${scheduledAt} (duration ${durationSeconds}s >= ${REVEAL_SMS_MIN_DURATION}s) ===`);
             const { error: scheduleError } = await supabase
               .from("pranks")
@@ -615,7 +615,7 @@ serve(async (req) => {
             if (scheduleError) {
               console.error("Error scheduling reveal SMS:", scheduleError);
             } else {
-              console.log("Reveal SMS scheduled successfully for 2 minutes from now");
+              console.log("Reveal SMS scheduled successfully for 1 minute from now");
             }
           } else {
             console.log(`=== SKIPPING REVEAL SMS: answered=${wasAnswered}, failed=${isFailed}, duration=${durationSeconds}s (min ${REVEAL_SMS_MIN_DURATION}s) ===`);
