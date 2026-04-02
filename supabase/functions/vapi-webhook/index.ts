@@ -413,11 +413,29 @@ serve(async (req) => {
         || body.message?.call?.recordingUrl;
       const endedReason = body.message?.endedReason || body.message?.call?.endedReason;
       
-      // Get call duration in seconds
-      const durationSeconds = body.message?.durationSeconds 
-        || body.message?.call?.duration
-        || body.message?.artifact?.duration
-        || 0;
+      // Get call duration in seconds - use ?? to handle 0 correctly, and fallback to timestamp calculation
+      let durationSeconds = body.message?.durationSeconds 
+        ?? body.message?.call?.duration
+        ?? body.message?.artifact?.duration
+        ?? null;
+      
+      // If no explicit duration, calculate from call timestamps
+      if (durationSeconds === null || durationSeconds === undefined) {
+        const callStartedAt = body.message?.call?.startedAt || body.message?.startedAt;
+        const callEndedAt = body.message?.call?.endedAt || body.message?.endedAt;
+        if (callStartedAt && callEndedAt) {
+          durationSeconds = (new Date(callEndedAt).getTime() - new Date(callStartedAt).getTime()) / 1000;
+          console.log(`Duration calculated from timestamps: ${durationSeconds}s (${callStartedAt} -> ${callEndedAt})`);
+        } else {
+          durationSeconds = 0;
+        }
+      }
+      
+      console.log("=== DURATION DEBUG ===");
+      console.log("body.message.durationSeconds:", body.message?.durationSeconds);
+      console.log("body.message.call.duration:", body.message?.call?.duration);
+      console.log("body.message.artifact.duration:", body.message?.artifact?.duration);
+      console.log("Final durationSeconds:", durationSeconds);
       
       // Get conversation transcript from artifact - VAPI can send it in multiple places
       // Try artifact.messages first, then fall back to other possible locations
