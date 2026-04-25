@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { VoiceTestDialog } from "@/components/VoiceTestDialog";
 import { VoiceSettingsAuditLog, logBatchChanges, logVoiceSettingChange } from "@/components/admin/VoiceSettingsAuditLog";
+import { VapiSnapshotsManager } from "@/components/admin/VapiSnapshotsManager";
 
 // Centralized types
 import type { VapiSettings, VoiceSetting, VapiVoicePreset } from "@/types/vapiSettings";
@@ -672,6 +673,16 @@ const AdminVoices = () => {
       <main className="px-4 py-6 max-w-6xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr,320px] gap-6">
           <div className="space-y-6">
+            {/* Backup & Restore */}
+            <VapiSnapshotsManager
+              onRestored={() => {
+                fetchVoiceSettings();
+                fetchVapiVoicePresets();
+                fetchCallProvider();
+                fetchAiModel();
+              }}
+            />
+
             {/* Call Provider Selection */}
             <Card className="border-2 border-purple-500/30 bg-gradient-to-br from-purple-500/5 to-transparent">
               <CardHeader className="pb-3">
