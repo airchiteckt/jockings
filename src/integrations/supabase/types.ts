@@ -784,6 +784,7 @@ export type Database = {
       }
       voice_settings: {
         Row: {
+          cost_per_1k_chars: number | null
           created_at: string
           description: string | null
           elevenlabs_similarity: number | null
@@ -795,15 +796,22 @@ export type Database = {
           id: string
           is_active: boolean | null
           language: string
+          latency_ms: number | null
+          model_id: string | null
           notes: string | null
           polly_voice_id: string | null
+          provider_settings: Json | null
+          provider_voice_id: string | null
           rating: number | null
           sample_audio_url: string | null
+          supports_italian_native: boolean | null
+          supports_streaming: boolean | null
           updated_at: string
           voice_name: string | null
           voice_provider: string
         }
         Insert: {
+          cost_per_1k_chars?: number | null
           created_at?: string
           description?: string | null
           elevenlabs_similarity?: number | null
@@ -815,15 +823,22 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           language: string
+          latency_ms?: number | null
+          model_id?: string | null
           notes?: string | null
           polly_voice_id?: string | null
+          provider_settings?: Json | null
+          provider_voice_id?: string | null
           rating?: number | null
           sample_audio_url?: string | null
+          supports_italian_native?: boolean | null
+          supports_streaming?: boolean | null
           updated_at?: string
           voice_name?: string | null
           voice_provider?: string
         }
         Update: {
+          cost_per_1k_chars?: number | null
           created_at?: string
           description?: string | null
           elevenlabs_similarity?: number | null
@@ -835,10 +850,16 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           language?: string
+          latency_ms?: number | null
+          model_id?: string | null
           notes?: string | null
           polly_voice_id?: string | null
+          provider_settings?: Json | null
+          provider_voice_id?: string | null
           rating?: number | null
           sample_audio_url?: string | null
+          supports_italian_native?: boolean | null
+          supports_streaming?: boolean | null
           updated_at?: string
           voice_name?: string | null
           voice_provider?: string
