@@ -245,7 +245,11 @@ export const GLADIA_LANGUAGES = [
 
 // Cartesia Models
 export const CARTESIA_MODELS = [
-  { value: "sonic", label: "Sonic", description: "⚡ Ultra bassa latenza", recommended: true },
+  { value: "sonic-3", label: "Sonic 3", description: "🚀 Nuovo - 40ms TTFB, italiano nativo", recommended: true },
+  { value: "sonic-3-turbo", label: "Sonic 3 Turbo", description: "⚡ Più veloce di sonic-3", recommended: false },
+  { value: "sonic-2", label: "Sonic 2", description: "Stabile, qualità alta", recommended: false },
+  { value: "sonic-english", label: "Sonic English", description: "Solo inglese, ottimizzato", recommended: false },
+  { value: "sonic", label: "Sonic (legacy)", description: "Versione originale", recommended: false },
 ] as const;
 
 // Cartesia Languages
