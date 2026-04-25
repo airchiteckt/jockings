@@ -159,6 +159,7 @@ const AdminVoices = () => {
             body: {
               voiceSettingId: insertedData.id,
               voiceId: newVapiPreset.voiceId,
+              provider: newVapiPreset.voiceProvider,
               stability: 0.5,
               similarity: 0.75,
               style: 0,
