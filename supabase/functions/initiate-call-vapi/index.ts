@@ -384,6 +384,10 @@ serve(async (req) => {
         'vapi_first_message_it',
         'vapi_first_message_en',
         'elevenlabs_model',
+        'cartesia_model',
+        'openai_tts_model',
+        'playht_model',
+        'azure_tts_model',
         // ElevenLabs voice fine-tuning from admin panel
         'vapi_voice_stability',
         'vapi_voice_similarity_boost',
@@ -433,7 +437,11 @@ serve(async (req) => {
       vapi_background_sound: 'off',
       vapi_backchanneling: 'false',
       vapi_end_call_message: 'Arrivederci!',
-      elevenlabs_model: 'eleven_v3', // Default - upgraded from eleven_turbo_v2_5 for max expressiveness
+      elevenlabs_model: 'eleven_turbo_v2_5',
+      cartesia_model: 'sonic-3',
+      openai_tts_model: 'tts-1-hd',
+      playht_model: 'PlayDialog',
+      azure_tts_model: 'neural',
     };
     
     settingsResult.data?.forEach((s: { key: string; value: string }) => {
@@ -850,9 +858,20 @@ serve(async (req) => {
             baseVoice.speed = voiceSpeed;
             baseVoice.useSpeakerBoost = settings['vapi_voice_speaker_boost'] === 'true';
           } else {
-            // Other providers (cartesia, openai, azure, ...): use model_id from voice_settings
-            if (voiceSettings?.model_id) {
-              baseVoice.model = voiceSettings.model_id;
+            // Other providers (cartesia, openai, azure, playht, ...):
+            // PRIORITY for model: voice_settings.model_id > provider-specific app_settings key > none
+            const PROVIDER_MODEL_KEY: Record<string, string> = {
+              'cartesia': 'cartesia_model',
+              'openai': 'openai_tts_model',
+              'playht': 'playht_model',
+              'azure': 'azure_tts_model',
+            };
+            const modelKey = PROVIDER_MODEL_KEY[voiceProvider];
+            const adminModel = modelKey ? settings[modelKey] : undefined;
+            const resolvedModel = voiceSettings?.model_id || adminModel;
+            if (resolvedModel) {
+              baseVoice.model = resolvedModel;
+              console.log(`[voice] provider=${voiceProvider} model=${resolvedModel} (source=${voiceSettings?.model_id ? 'voice_settings' : 'app_settings:' + modelKey})`);
             }
             // Optional provider-specific settings (JSONB) override/extend the payload
             // Example for Cartesia: { "language": "it", "speed": "normal", "emotion": ["positivity:high"] }

@@ -54,8 +54,14 @@ const AdminVoices = () => {
   const [voiceTestOpen, setVoiceTestOpen] = useState(false);
   const [generatingSampleId, setGeneratingSampleId] = useState<string | null>(null);
   
-  // ElevenLabs model (managed separately for VAPI voice config)
-  const [elevenlabsModel, setElevenlabsModel] = useState("eleven_turbo_v2_5");
+  // Voice TTS models per provider (each provider has its own model field to avoid cross-contamination)
+  const [voiceModels, setVoiceModels] = useState({
+    elevenlabs: "eleven_turbo_v2_5",
+    cartesia: "sonic-3",
+    openai: "tts-1-hd",
+    playht: "PlayDialog",
+    azure: "neural",
+  });
   
   // Call Provider selection
   const [callProvider, setCallProvider] = useState<"twilio" | "vapi">("twilio");
@@ -251,6 +257,10 @@ const AdminVoices = () => {
         "vapi_background_denoising",
         "vapi_model_output_in_messages",
         "elevenlabs_model",
+        "cartesia_model",
+        "openai_tts_model",
+        "playht_model",
+        "azure_tts_model",
       ]);
     
     if (data) {
@@ -302,7 +312,11 @@ const AdminVoices = () => {
         if (key === "vapi_hipaa_enabled") newSettings.hipaaEnabled = value === "true";
         if (key === "vapi_background_denoising") newSettings.backgroundDenoisingEnabled = value === "true";
         if (key === "vapi_model_output_in_messages") newSettings.modelOutputInMessagesEnabled = value === "true";
-        if (key === "elevenlabs_model") setElevenlabsModel(value);
+        if (key === "elevenlabs_model") setVoiceModels((m) => ({ ...m, elevenlabs: value }));
+        if (key === "cartesia_model") setVoiceModels((m) => ({ ...m, cartesia: value }));
+        if (key === "openai_tts_model") setVoiceModels((m) => ({ ...m, openai: value }));
+        if (key === "playht_model") setVoiceModels((m) => ({ ...m, playht: value }));
+        if (key === "azure_tts_model") setVoiceModels((m) => ({ ...m, azure: value }));
         
         // Store initial values for change tracking
         previousSettingsRef.current[key] = value;
@@ -368,7 +382,11 @@ const AdminVoices = () => {
         { key: "vapi_hipaa_enabled", value: vapiSettings.hipaaEnabled.toString() },
         { key: "vapi_background_denoising", value: vapiSettings.backgroundDenoisingEnabled.toString() },
         { key: "vapi_model_output_in_messages", value: vapiSettings.modelOutputInMessagesEnabled.toString() },
-        { key: "elevenlabs_model", value: elevenlabsModel },
+        { key: "elevenlabs_model", value: voiceModels.elevenlabs },
+        { key: "cartesia_model", value: voiceModels.cartesia },
+        { key: "openai_tts_model", value: voiceModels.openai },
+        { key: "playht_model", value: voiceModels.playht },
+        { key: "azure_tts_model", value: voiceModels.azure },
       ];
 
       // Log all settings being saved
@@ -1201,12 +1219,24 @@ const AdminVoices = () => {
                           );
                         }
 
+                        // Active provider key for the model state object
+                        const providerKey: keyof typeof voiceModels | null =
+                          isEleven ? "elevenlabs"
+                          : isCartesia ? "cartesia"
+                          : isOpenAI ? "openai"
+                          : isPlayHT ? "playht"
+                          : isAzure ? "azure"
+                          : null;
+
                         return (
                           <div className="space-y-2">
                             <Label>{label}</Label>
                             <Select
-                              value={elevenlabsModel}
-                              onValueChange={(value) => setElevenlabsModel(value)}
+                              value={providerKey ? voiceModels[providerKey] : ""}
+                              onValueChange={(value) => {
+                                if (!providerKey) return;
+                                setVoiceModels((m) => ({ ...m, [providerKey]: value }));
+                              }}
                             >
                               <SelectTrigger>
                                 <SelectValue />
