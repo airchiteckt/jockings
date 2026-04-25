@@ -657,6 +657,40 @@ serve(async (req) => {
       console.log('Provider:', voiceProvider);
     }
 
+    // === MULTI-PROVIDER VOICE OVERRIDE ===
+    // If voice_settings has a non-ElevenLabs provider configured, use that instead.
+    // Map our internal provider names to VAPI's expected provider IDs.
+    // Supported by VAPI: 11labs, cartesia, openai, azure, playht, deepgram, rime-ai, smallest-ai, neets, lmnt, tavus, hume
+    const PROVIDER_MAP: Record<string, string> = {
+      'elevenlabs': '11labs',
+      '11labs': '11labs',
+      'cartesia': 'cartesia',
+      'openai': 'openai',
+      'azure': 'azure',
+      'playht': 'playht',
+      'deepgram': 'deepgram',
+      'rime-ai': 'rime-ai',
+      'smallest-ai': 'smallest-ai',
+      'inworld': 'inworld', // Note: verify VAPI support
+      'google': 'google',   // Note: verify VAPI support
+    };
+
+    const rawProvider = voiceSettings?.voice_provider;
+    const isNonElevenLabsProvider = rawProvider && !['elevenlabs', '11labs'].includes(rawProvider);
+
+    if (isNonElevenLabsProvider && voiceSettings) {
+      const mappedProvider = PROVIDER_MAP[rawProvider] || rawProvider;
+      // For non-ElevenLabs: prefer provider_voice_id, fallback to elevenlabs_voice_id field (legacy storage)
+      const mappedVoiceId = voiceSettings.provider_voice_id || voiceSettings.elevenlabs_voice_id;
+      if (mappedVoiceId) {
+        voiceProvider = mappedProvider;
+        voiceId = mappedVoiceId;
+        console.log(`=== MULTI-PROVIDER OVERRIDE: ${rawProvider} -> ${mappedProvider}, voiceId: ${voiceId} ===`);
+      } else {
+        console.warn(`Voice settings has provider "${rawProvider}" but no provider_voice_id; falling back to ElevenLabs defaults`);
+      }
+    }
+
     console.log('=== DYNAMIC CONTENT ===');
     console.log('First Message:', firstMessage);
     console.log('Voice Provider:', voiceProvider);
