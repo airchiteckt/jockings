@@ -159,6 +159,7 @@ const AdminVoices = () => {
             body: {
               voiceSettingId: insertedData.id,
               voiceId: newVapiPreset.voiceId,
+              provider: newVapiPreset.voiceProvider,
               stability: 0.5,
               similarity: 0.75,
               style: 0,
@@ -596,6 +597,7 @@ const AdminVoices = () => {
         body: {
           voiceSettingId: setting.id,
           voiceId: setting.elevenlabs_voice_id,
+          provider: setting.voice_provider,
           stability: setting.elevenlabs_stability || 0.5,
           similarity: setting.elevenlabs_similarity || 0.75,
           style: setting.elevenlabs_style || 0,
