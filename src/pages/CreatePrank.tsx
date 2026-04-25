@@ -774,6 +774,18 @@ const CreatePrank = () => {
                     />
                   </div>
                 </div>
+                {victimPhone.trim() && (() => {
+                  const check = normalizeE164(victimPhone, phoneCountryCode);
+                  return check.isValid ? (
+                    <p className="text-xs text-green-500 mt-1.5 font-mono">
+                      ✅ Chiamerai: {check.formatted}
+                    </p>
+                  ) : (
+                    <p className="text-xs text-destructive mt-1.5">
+                      ⚠️ Numero non valido per {phoneCountryCode}. Inserisci solo il numero senza prefisso (es. 333 1234567).
+                    </p>
+                  );
+                })()}
               </div>
               {/* Trial prank available */}
               {profile && profile.available_pranks === 0 && !profile.trial_prank_used && profile.phone_verified && (
@@ -1068,7 +1080,7 @@ const CreatePrank = () => {
                   </div>
                   <div className="flex items-center justify-between py-1.5 sm:py-2">
                     <span className="text-muted-foreground text-xs sm:text-sm">Telefono</span>
-                    <span className="font-medium font-mono text-xs sm:text-sm">{selectedCountry?.flag} {phoneCountryCode} {victimPhone}</span>
+                    <span className="font-medium font-mono text-xs sm:text-sm">{selectedCountry?.flag} {normalizeE164(victimPhone, phoneCountryCode).formatted ?? `${phoneCountryCode} ${victimPhone}`}</span>
                   </div>
                   <div className="flex items-center justify-between py-1.5 sm:py-2">
                     <span className="text-muted-foreground text-xs sm:text-sm">Sesso</span>
