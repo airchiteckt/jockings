@@ -259,6 +259,8 @@ export const CARTESIA_LANGUAGES = [
   { value: "es", label: "🇪🇸 Español" },
   { value: "fr", label: "🇫🇷 Français" },
   { value: "de", label: "🇩🇪 Deutsch" },
+] as const;
+
 // OpenAI TTS Models
 export const OPENAI_TTS_MODELS = [
   { value: "gpt-4o-mini-tts", label: "GPT-4o Mini TTS", description: "🚀 Nuovo - Steerable, espressivo", recommended: true },
