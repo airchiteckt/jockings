@@ -743,6 +743,42 @@ export type Database = {
         }
         Relationships: []
       }
+      vapi_settings_snapshots: {
+        Row: {
+          app_settings_data: Json
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          is_auto: boolean
+          name: string
+          source_snapshot_id: string | null
+          voice_settings_data: Json
+        }
+        Insert: {
+          app_settings_data?: Json
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          is_auto?: boolean
+          name: string
+          source_snapshot_id?: string | null
+          voice_settings_data?: Json
+        }
+        Update: {
+          app_settings_data?: Json
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          is_auto?: boolean
+          name?: string
+          source_snapshot_id?: string | null
+          voice_settings_data?: Json
+        }
+        Relationships: []
+      }
       verified_caller_ids: {
         Row: {
           created_at: string
