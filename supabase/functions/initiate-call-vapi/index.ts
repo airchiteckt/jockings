@@ -384,6 +384,10 @@ serve(async (req) => {
         'vapi_first_message_it',
         'vapi_first_message_en',
         'elevenlabs_model',
+        'cartesia_model',
+        'openai_tts_model',
+        'playht_model',
+        'azure_tts_model',
         // ElevenLabs voice fine-tuning from admin panel
         'vapi_voice_stability',
         'vapi_voice_similarity_boost',
@@ -433,7 +437,11 @@ serve(async (req) => {
       vapi_background_sound: 'off',
       vapi_backchanneling: 'false',
       vapi_end_call_message: 'Arrivederci!',
-      elevenlabs_model: 'eleven_v3', // Default - upgraded from eleven_turbo_v2_5 for max expressiveness
+      elevenlabs_model: 'eleven_turbo_v2_5',
+      cartesia_model: 'sonic-3',
+      openai_tts_model: 'tts-1-hd',
+      playht_model: 'PlayDialog',
+      azure_tts_model: 'neural',
     };
     
     settingsResult.data?.forEach((s: { key: string; value: string }) => {
