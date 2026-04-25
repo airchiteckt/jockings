@@ -1219,12 +1219,24 @@ const AdminVoices = () => {
                           );
                         }
 
+                        // Active provider key for the model state object
+                        const providerKey: keyof typeof voiceModels | null =
+                          isEleven ? "elevenlabs"
+                          : isCartesia ? "cartesia"
+                          : isOpenAI ? "openai"
+                          : isPlayHT ? "playht"
+                          : isAzure ? "azure"
+                          : null;
+
                         return (
                           <div className="space-y-2">
                             <Label>{label}</Label>
                             <Select
-                              value={elevenlabsModel}
-                              onValueChange={(value) => setElevenlabsModel(value)}
+                              value={providerKey ? voiceModels[providerKey] : ""}
+                              onValueChange={(value) => {
+                                if (!providerKey) return;
+                                setVoiceModels((m) => ({ ...m, [providerKey]: value }));
+                              }}
                             >
                               <SelectTrigger>
                                 <SelectValue />
