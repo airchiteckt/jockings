@@ -15,8 +15,8 @@ import { z } from "zod";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import PrankDisclaimerModal from "@/components/PrankDisclaimerModal";
+import { normalizeE164, extractNationalDigits } from "@/lib/phone";
 
-const phoneSchema = z.string().regex(/^\d{6,15}$/, "Numero di telefono non valido");
 const normalizePhoneDigits = (value: string) => value.replace(/\D/g, "");
 
 const COUNTRY_CODES = [
@@ -219,8 +219,9 @@ const CreatePrank = () => {
       
       const matchedCountry = COUNTRY_CODES.find(c => phoneParam.startsWith(c.code));
       if (matchedCountry) {
-        setPhoneCountryCode(matchedCountry.code);
-        setVictimPhone(phoneParam.replace(matchedCountry.code, "").trim());
+        const { dialCode, nationalDigits } = extractNationalDigits(phoneParam, matchedCountry.code);
+        setPhoneCountryCode(dialCode);
+        setVictimPhone(nationalDigits);
       } else {
         setVictimPhone(phoneParam);
       }
@@ -375,8 +376,9 @@ const CreatePrank = () => {
         const phone = data.victim_phone;
         const matchedCountry = COUNTRY_CODES.find(c => phone.startsWith(c.code));
         if (matchedCountry) {
-          setPhoneCountryCode(matchedCountry.code);
-          setVictimPhone(phone.replace(matchedCountry.code, "").trim());
+          const { dialCode, nationalDigits } = extractNationalDigits(phone, matchedCountry.code);
+          setPhoneCountryCode(dialCode);
+          setVictimPhone(nationalDigits);
         } else {
           setVictimPhone(phone);
         }
@@ -414,11 +416,16 @@ const CreatePrank = () => {
           toast({ title: "Errore", description: "Inserisci il nome della vittima", variant: "destructive" });
           return false;
         }
-        try {
-          phoneSchema.parse(normalizePhoneDigits(victimPhone));
-        } catch {
-          toast({ title: "Errore", description: "Numero di telefono non valido", variant: "destructive" });
-          return false;
+        {
+          const phoneCheck = normalizeE164(victimPhone, phoneCountryCode);
+          if (!phoneCheck.isValid) {
+            toast({
+              title: "Numero non valido",
+              description: `Controlla il numero per ${phoneCountryCode}. Esempio: 333 1234567`,
+              variant: "destructive",
+            });
+            return false;
+          }
         }
         // No longer restrict trial to own phone number — trial allows any number
         // Block if trial already used and no pranks
@@ -537,7 +544,7 @@ const CreatePrank = () => {
           victim_first_name: victimFirstName.trim(),
           victim_last_name: victimLastName.trim(),
           victim_gender: victimGender,
-          victim_phone: `${phoneCountryCode}${normalizePhoneDigits(victimPhone)}`,
+          victim_phone: normalizeE164(victimPhone, phoneCountryCode).e164 ?? `${phoneCountryCode}${normalizePhoneDigits(victimPhone)}`,
           prank_theme: prankTheme.trim(),
           real_detail: realDetail.trim() || null,
           voice_gender: voiceSettings?.gender || "male",
@@ -767,6 +774,18 @@ const CreatePrank = () => {
                     />
                   </div>
                 </div>
+                {victimPhone.trim() && (() => {
+                  const check = normalizeE164(victimPhone, phoneCountryCode);
+                  return check.isValid ? (
+                    <p className="text-xs text-green-500 mt-1.5 font-mono">
+                      ✅ Chiamerai: {check.formatted}
+                    </p>
+                  ) : (
+                    <p className="text-xs text-destructive mt-1.5">
+                      ⚠️ Numero non valido per {phoneCountryCode}. Inserisci solo il numero senza prefisso (es. 333 1234567).
+                    </p>
+                  );
+                })()}
               </div>
               {/* Trial prank available */}
               {profile && profile.available_pranks === 0 && !profile.trial_prank_used && profile.phone_verified && (
@@ -1061,7 +1080,7 @@ const CreatePrank = () => {
                   </div>
                   <div className="flex items-center justify-between py-1.5 sm:py-2">
                     <span className="text-muted-foreground text-xs sm:text-sm">Telefono</span>
-                    <span className="font-medium font-mono text-xs sm:text-sm">{selectedCountry?.flag} {phoneCountryCode} {victimPhone}</span>
+                    <span className="font-medium font-mono text-xs sm:text-sm">{selectedCountry?.flag} {normalizeE164(victimPhone, phoneCountryCode).formatted ?? `${phoneCountryCode} ${victimPhone}`}</span>
                   </div>
                   <div className="flex items-center justify-between py-1.5 sm:py-2">
                     <span className="text-muted-foreground text-xs sm:text-sm">Sesso</span>
