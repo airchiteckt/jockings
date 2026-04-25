@@ -657,6 +657,40 @@ serve(async (req) => {
       console.log('Provider:', voiceProvider);
     }
 
+    // === MULTI-PROVIDER VOICE OVERRIDE ===
+    // If voice_settings has a non-ElevenLabs provider configured, use that instead.
+    // Map our internal provider names to VAPI's expected provider IDs.
+    // Supported by VAPI: 11labs, cartesia, openai, azure, playht, deepgram, rime-ai, smallest-ai, neets, lmnt, tavus, hume
+    const PROVIDER_MAP: Record<string, string> = {
+      'elevenlabs': '11labs',
+      '11labs': '11labs',
+      'cartesia': 'cartesia',
+      'openai': 'openai',
+      'azure': 'azure',
+      'playht': 'playht',
+      'deepgram': 'deepgram',
+      'rime-ai': 'rime-ai',
+      'smallest-ai': 'smallest-ai',
+      'inworld': 'inworld', // Note: verify VAPI support
+      'google': 'google',   // Note: verify VAPI support
+    };
+
+    const rawProvider = voiceSettings?.voice_provider;
+    const isNonElevenLabsProvider = rawProvider && !['elevenlabs', '11labs'].includes(rawProvider);
+
+    if (isNonElevenLabsProvider && voiceSettings) {
+      const mappedProvider = PROVIDER_MAP[rawProvider] || rawProvider;
+      // For non-ElevenLabs: prefer provider_voice_id, fallback to elevenlabs_voice_id field (legacy storage)
+      const mappedVoiceId = voiceSettings.provider_voice_id || voiceSettings.elevenlabs_voice_id;
+      if (mappedVoiceId) {
+        voiceProvider = mappedProvider;
+        voiceId = mappedVoiceId;
+        console.log(`=== MULTI-PROVIDER OVERRIDE: ${rawProvider} -> ${mappedProvider}, voiceId: ${voiceId} ===`);
+      } else {
+        console.warn(`Voice settings has provider "${rawProvider}" but no provider_voice_id; falling back to ElevenLabs defaults`);
+      }
+    }
+
     console.log('=== DYNAMIC CONTENT ===');
     console.log('First Message:', firstMessage);
     console.log('Voice Provider:', voiceProvider);
@@ -779,26 +813,43 @@ serve(async (req) => {
           maxTokens: Math.max(parseInt(settings['vapi_max_tokens']), 500),
         },
         
-        // Voice configuration - use admin panel settings first, then voice_settings table as fallback
-        // CRITICAL: Use highest quality ElevenLabs model for best audio
-        voice: {
-          provider: voiceProvider,
-          voiceId: voiceId,
-          model: settings['elevenlabs_model'] || 'eleven_turbo_v2_5',
-          stability: voiceStability,
-          similarityBoost: voiceSimilarityBoost,
-          style: voiceStyle,
-          speed: voiceSpeed,
-          useSpeakerBoost: settings['vapi_voice_speaker_boost'] === 'true',
-          fillerInjectionEnabled: settings['vapi_filler_injection_enabled'] === 'true',
-          // CRITICAL: Optimize for quality - use highest available settings
-          chunkPlan: {
-            enabled: true,
-            minCharacters: 30, // Larger chunks = better quality audio
-            punctuationBoundaries: [".", "!", "?", ",", ";"],
-          },
-        },
-        
+        // Voice configuration - dynamically built per provider
+        // ElevenLabs: full param set. Other providers: minimal payload + optional provider_settings override
+        voice: (() => {
+          const baseVoice: any = {
+            provider: voiceProvider,
+            voiceId: voiceId,
+            chunkPlan: {
+              enabled: true,
+              minCharacters: 30,
+              punctuationBoundaries: [".", "!", "?", ",", ";"],
+            },
+            fillerInjectionEnabled: settings['vapi_filler_injection_enabled'] === 'true',
+          };
+
+          if (voiceProvider === '11labs') {
+            // ElevenLabs full configuration (existing behavior preserved)
+            baseVoice.model = settings['elevenlabs_model'] || 'eleven_turbo_v2_5';
+            baseVoice.stability = voiceStability;
+            baseVoice.similarityBoost = voiceSimilarityBoost;
+            baseVoice.style = voiceStyle;
+            baseVoice.speed = voiceSpeed;
+            baseVoice.useSpeakerBoost = settings['vapi_voice_speaker_boost'] === 'true';
+          } else {
+            // Other providers (cartesia, openai, azure, ...): use model_id from voice_settings
+            if (voiceSettings?.model_id) {
+              baseVoice.model = voiceSettings.model_id;
+            }
+            // Optional provider-specific settings (JSONB) override/extend the payload
+            // Example for Cartesia: { "language": "it", "speed": "normal", "emotion": ["positivity:high"] }
+            if (voiceSettings?.provider_settings && typeof voiceSettings.provider_settings === 'object') {
+              Object.assign(baseVoice, voiceSettings.provider_settings);
+            }
+          }
+
+          return baseVoice;
+        })(),
+
         // Transcriber configuration - use settings from admin panel
         // Different providers require different model formats
         transcriber: {
