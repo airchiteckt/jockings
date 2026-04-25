@@ -1149,30 +1149,72 @@ const AdminVoices = () => {
                           </SelectContent>
                         </Select>
                       </div>
-                      <div className="space-y-2">
-                        <Label>Modello ElevenLabs</Label>
-                        <Select 
-                          value={elevenlabsModel} 
-                          onValueChange={(value) => setElevenlabsModel(value)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {ELEVENLABS_MODELS.map((model) => (
-                              <SelectItem key={model.value} value={model.value}>
-                                <div className="flex flex-col">
-                                  <span className={model.recommended ? "font-medium" : ""}>{model.label}</span>
-                                  <span className="text-xs text-muted-foreground">{model.description}</span>
-                                </div>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <p className="text-xs text-muted-foreground">
-                          Turbo v2.5 è il più veloce. Le voci sono gestite nei Preset Voce sopra.
-                        </p>
-                      </div>
+                      {(() => {
+                        const provider = vapiSettings.voiceProvider;
+                        const isEleven = provider === "11labs" || provider === "elevenlabs";
+                        const isCartesia = provider === "cartesia";
+                        const isOpenAI = provider === "openai";
+                        const isPlayHT = provider === "playht";
+                        const isAzure = provider === "azure";
+
+                        // Provider che hanno un select di modello/voce
+                        const modelOptions = isEleven ? ELEVENLABS_MODELS
+                          : isCartesia ? CARTESIA_MODELS
+                          : isOpenAI ? OPENAI_TTS_MODELS
+                          : isPlayHT ? PLAYHT_MODELS
+                          : isAzure ? AZURE_TTS_VOICES
+                          : null;
+
+                        const label = isEleven ? "Modello ElevenLabs"
+                          : isCartesia ? "Modello Cartesia"
+                          : isOpenAI ? "Modello OpenAI TTS"
+                          : isPlayHT ? "Modello PlayHT"
+                          : isAzure ? "Voce Azure Neural"
+                          : "Modello";
+
+                        const helper = isEleven ? "Turbo v2.5 è il più veloce."
+                          : isCartesia ? "Sonic-3 ha 40ms TTFB e supporto italiano nativo."
+                          : isOpenAI ? "gpt-4o-mini-tts è il più espressivo e steerable."
+                          : isPlayHT ? "PlayDialog ottimo per conversazioni multi-turno."
+                          : isAzure ? "Voci Multilingual supportano IT/EN/ES con la stessa voce."
+                          : "Le voci sono gestite nei Preset Voce sopra.";
+
+                        if (!modelOptions) {
+                          return (
+                            <div className="space-y-2">
+                              <Label>Modello</Label>
+                              <div className="text-xs text-muted-foreground p-3 rounded border bg-muted/30">
+                                Configura modello e voce direttamente nei Preset Voce sopra per il provider <strong>{provider}</strong>.
+                              </div>
+                            </div>
+                          );
+                        }
+
+                        return (
+                          <div className="space-y-2">
+                            <Label>{label}</Label>
+                            <Select
+                              value={elevenlabsModel}
+                              onValueChange={(value) => setElevenlabsModel(value)}
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {modelOptions.map((model: any) => (
+                                  <SelectItem key={model.value} value={model.value}>
+                                    <div className="flex flex-col">
+                                      <span className={model.recommended ? "font-medium" : ""}>{model.label}</span>
+                                      <span className="text-xs text-muted-foreground">{model.description}</span>
+                                    </div>
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <p className="text-xs text-muted-foreground">{helper} Le voci sono gestite nei Preset Voce sopra.</p>
+                          </div>
+                        );
+                      })()}
                     </div>
                   </div>
                 </div>
