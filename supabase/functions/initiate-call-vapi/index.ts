@@ -829,7 +829,21 @@ serve(async (req) => {
 
           if (voiceProvider === '11labs') {
             // ElevenLabs full configuration (existing behavior preserved)
-            baseVoice.model = settings['elevenlabs_model'] || 'eleven_turbo_v2_5';
+            // Guard: elevenlabs_model setting is shared across providers in admin UI;
+            // if it currently holds a non-ElevenLabs model (e.g. Cartesia "sonic-3"),
+            // fallback to a safe ElevenLabs default to avoid VAPI 400 errors.
+            const VALID_11LABS_MODELS = [
+              'eleven_multilingual_v2', 'eleven_turbo_v2', 'eleven_turbo_v2_5',
+              'eleven_flash_v2', 'eleven_flash_v2_5', 'eleven_monolingual_v1', 'eleven_v3',
+            ];
+            const requestedModel = settings['elevenlabs_model'] || 'eleven_turbo_v2_5';
+            const safeModel = VALID_11LABS_MODELS.includes(requestedModel)
+              ? requestedModel
+              : 'eleven_turbo_v2_5';
+            if (safeModel !== requestedModel) {
+              console.warn(`[voice] elevenlabs_model "${requestedModel}" is not a valid ElevenLabs model — falling back to "${safeModel}"`);
+            }
+            baseVoice.model = safeModel;
             baseVoice.stability = voiceStability;
             baseVoice.similarityBoost = voiceSimilarityBoost;
             baseVoice.style = voiceStyle;
