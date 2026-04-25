@@ -261,7 +261,77 @@ export const CARTESIA_LANGUAGES = [
   { value: "de", label: "🇩🇪 Deutsch" },
 ] as const;
 
-// ElevenLabs STT Languages
+// OpenAI TTS Models
+export const OPENAI_TTS_MODELS = [
+  { value: "gpt-4o-mini-tts", label: "GPT-4o Mini TTS", description: "🚀 Nuovo - Steerable, espressivo", recommended: true },
+  { value: "tts-1", label: "TTS-1", description: "⚡ Bassa latenza", recommended: false },
+  { value: "tts-1-hd", label: "TTS-1 HD", description: "Alta qualità, più lento", recommended: false },
+] as const;
+
+// OpenAI TTS Voices
+export const OPENAI_TTS_VOICES = [
+  { value: "alloy", label: "Alloy", description: "Neutro, bilanciato" },
+  { value: "ash", label: "Ash", description: "Maschile, espressivo" },
+  { value: "ballad", label: "Ballad", description: "Maschile, melodico" },
+  { value: "coral", label: "Coral", description: "Femminile, calda" },
+  { value: "echo", label: "Echo", description: "Maschile, profondo" },
+  { value: "fable", label: "Fable", description: "Narratore britannico" },
+  { value: "onyx", label: "Onyx", description: "Maschile, autorevole" },
+  { value: "nova", label: "Nova", description: "Femminile, energica" },
+  { value: "sage", label: "Sage", description: "Femminile, calma" },
+  { value: "shimmer", label: "Shimmer", description: "Femminile, brillante" },
+  { value: "verse", label: "Verse", description: "Maschile, poetico" },
+] as const;
+
+// Azure TTS Voices (Italiano + multilingua principali)
+export const AZURE_TTS_VOICES = [
+  { value: "it-IT-IsabellaMultilingualNeural", label: "Isabella Multilingual", description: "🇮🇹 Femminile, multilingua" },
+  { value: "it-IT-GiuseppeMultilingualNeural", label: "Giuseppe Multilingual", description: "🇮🇹 Maschile, multilingua" },
+  { value: "it-IT-ElsaNeural", label: "Elsa", description: "🇮🇹 Femminile, naturale" },
+  { value: "it-IT-IsabellaNeural", label: "Isabella", description: "🇮🇹 Femminile, calda" },
+  { value: "it-IT-DiegoNeural", label: "Diego", description: "🇮🇹 Maschile, autorevole" },
+  { value: "it-IT-BenignoNeural", label: "Benigno", description: "🇮🇹 Maschile, amichevole" },
+  { value: "it-IT-CalimeroNeural", label: "Calimero", description: "🇮🇹 Maschile, giovane" },
+  { value: "it-IT-CataldoNeural", label: "Cataldo", description: "🇮🇹 Maschile, anziano" },
+  { value: "it-IT-FabiolaNeural", label: "Fabiola", description: "🇮🇹 Femminile, professionale" },
+  { value: "it-IT-FiammaNeural", label: "Fiamma", description: "🇮🇹 Femminile, energica" },
+  { value: "it-IT-GianniNeural", label: "Gianni", description: "🇮🇹 Maschile, narratore" },
+  { value: "en-US-AndrewMultilingualNeural", label: "Andrew Multilingual", description: "🇺🇸 Maschile, multilingua" },
+  { value: "en-US-AvaMultilingualNeural", label: "Ava Multilingual", description: "🇺🇸 Femminile, multilingua" },
+] as const;
+
+// Cartesia Voices (italiano focus)
+export const CARTESIA_VOICES = [
+  { value: "custom", label: "Voice ID Personalizzato", description: "Inserisci il tuo Voice ID Cartesia" },
+] as const;
+
+// PlayHT Models
+export const PLAYHT_MODELS = [
+  { value: "PlayDialog", label: "PlayDialog", description: "🚀 Conversazionale, multi-turno", recommended: true },
+  { value: "Play3.0-mini", label: "Play 3.0 Mini", description: "⚡ Bassa latenza", recommended: false },
+  { value: "PlayHT2.0-turbo", label: "PlayHT 2.0 Turbo", description: "Veloce, stabile", recommended: false },
+  { value: "PlayHT2.0", label: "PlayHT 2.0", description: "Qualità alta, più lento", recommended: false },
+] as const;
+
+// Helper to get TTS options by provider (per Admin Voices UI)
+export const getTtsOptions = (provider: string) => {
+  switch (provider) {
+    case 'openai':
+      return { models: OPENAI_TTS_MODELS, voices: OPENAI_TTS_VOICES };
+    case 'azure':
+      return { models: null, voices: AZURE_TTS_VOICES };
+    case 'cartesia':
+      return { models: CARTESIA_MODELS, voices: CARTESIA_VOICES };
+    case 'playht':
+      return { models: PLAYHT_MODELS, voices: null };
+    case '11labs':
+    case 'elevenlabs':
+      return { models: ELEVENLABS_MODELS, voices: VAPI_ELEVENLABS_VOICES };
+    default:
+      return { models: null, voices: null };
+  }
+};
+
 export const ELEVENLABS_STT_LANGUAGES = [
   { value: "it", label: "🇮🇹 Italiano" },
   { value: "en", label: "🇬🇧 English" },
