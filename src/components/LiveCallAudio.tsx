@@ -9,6 +9,8 @@ interface LiveCallAudioProps {
   disabled?: boolean;
   /** Compact button layout (icon-only) */
   compact?: boolean;
+  /** Make button take full width of its container (useful on mobile) */
+  fullWidth?: boolean;
 }
 
 /**
