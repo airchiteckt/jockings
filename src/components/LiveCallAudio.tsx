@@ -163,10 +163,18 @@ const LiveCallAudio = ({ listenUrl, disabled, compact, fullWidth }: LiveCallAudi
 
       ws.onmessage = (event) => {
         if (typeof event.data === "string") {
-          // VAPI sends a JSON control frame first (with sampleRate etc.)
+          // VAPI sends a JSON control frame first (with sampleRate, channels, etc.)
           try {
             const msg = JSON.parse(event.data);
             console.log("[LiveCallAudio] control:", msg);
+            if (msg && typeof msg === "object") {
+              if (typeof msg.sampleRate === "number" && msg.sampleRate > 0) {
+                inputSampleRateRef.current = msg.sampleRate;
+              }
+              if (typeof msg.channels === "number" && msg.channels > 0) {
+                inputChannelsRef.current = msg.channels;
+              }
+            }
           } catch {
             // ignore
           }
@@ -182,9 +190,15 @@ const LiveCallAudio = ({ listenUrl, disabled, compact, fullWidth }: LiveCallAudi
           });
         }
 
-        const float32 = resamplePcmChunk(buffer, SAMPLE_RATE, ctx.sampleRate);
-        const audioBuffer = ctx.createBuffer(1, float32.length, ctx.sampleRate);
-        audioBuffer.getChannelData(0).set(float32);
+        const channels = inputChannelsRef.current || 1;
+        const inputRate = inputSampleRateRef.current || 16000;
+        const channelData = decodePcmChunk(buffer, channels, inputRate, ctx.sampleRate);
+        if (channelData.length === 0 || channelData[0].length === 0) return;
+
+        const audioBuffer = ctx.createBuffer(channels, channelData[0].length, ctx.sampleRate);
+        for (let c = 0; c < channels; c++) {
+          audioBuffer.getChannelData(c).set(channelData[c]);
+        }
 
         const source = ctx.createBufferSource();
         source.buffer = audioBuffer;
