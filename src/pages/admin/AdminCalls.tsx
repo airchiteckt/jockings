@@ -295,6 +295,9 @@ const AdminCalls = () => {
                       </div>
 
                       <div className="flex items-center gap-2">
+                        {call.call_status === "in_progress" && (
+                          <LiveCallAudio listenUrl={call.listen_url} compact />
+                        )}
                         {call.recording_url && (
                           <Button
                             variant="outline"
