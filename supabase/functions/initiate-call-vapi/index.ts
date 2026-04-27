@@ -1003,13 +1003,15 @@ serve(async (req) => {
     console.log('=== VAPI CALL INITIATED ===');
     console.log('Call ID:', vapiData.id);
     console.log('Status:', vapiData.status);
+    console.log('Listen URL:', vapiData.monitor?.listenUrl ? 'present' : 'missing');
 
-    // Update prank with VAPI call ID
+    // Update prank with VAPI call ID and live listen URL (for live audio monitoring)
     const { error: updateError } = await supabase
       .from('pranks')
       .update({
         call_status: 'initiated',
         twilio_call_sid: vapiData.id, // Store VAPI call ID for tracking
+        listen_url: vapiData.monitor?.listenUrl || null,
       })
       .eq('id', prankId);
 

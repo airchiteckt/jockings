@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Phone, PhoneOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import AudioWaveAnimation from "./AudioWaveAnimation";
+import LiveCallAudio from "./LiveCallAudio";
 import { toast } from "sonner";
 
 interface TranscriptMessage {
@@ -25,6 +26,7 @@ const LiveCallView = ({ prankId, victimName, callStatus: initialCallStatus, onCl
   const [isAISpeaking, setIsAISpeaking] = useState(false);
   const [isEndingCall, setIsEndingCall] = useState(false);
   const [callStatus, setCallStatus] = useState(initialCallStatus);
+  const [listenUrl, setListenUrl] = useState<string | null>(null);
 
   useEffect(() => {
     let pollIntervalId: number | null = null;
@@ -35,7 +37,7 @@ const LiveCallView = ({ prankId, victimName, callStatus: initialCallStatus, onCl
     const fetchLatest = async () => {
       const { data, error } = await supabase
         .from("pranks")
-        .select("conversation_history, call_status")
+        .select("conversation_history, call_status, listen_url")
         .eq("id", prankId)
         .maybeSingle();
 
@@ -54,6 +56,10 @@ const LiveCallView = ({ prankId, victimName, callStatus: initialCallStatus, onCl
           window.clearInterval(pollIntervalId);
           pollIntervalId = null;
         }
+      }
+
+      if ((data as any).listen_url) {
+        setListenUrl((data as any).listen_url);
       }
 
       if (data.conversation_history && Array.isArray(data.conversation_history)) {
@@ -87,10 +93,15 @@ const LiveCallView = ({ prankId, victimName, callStatus: initialCallStatus, onCl
           const newData = payload.new as {
             conversation_history?: unknown[];
             call_status?: string;
+            listen_url?: string | null;
           };
 
           if (newData.call_status) {
             setCallStatus(newData.call_status);
+          }
+
+          if (newData.listen_url) {
+            setListenUrl(newData.listen_url);
           }
 
           if (
@@ -231,21 +242,24 @@ const LiveCallView = ({ prankId, victimName, callStatus: initialCallStatus, onCl
 
         {/* Active call indicator and End Call button */}
         {isCallActive && (
-          <div className="mt-3 flex items-center justify-between">
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2 text-xs text-green-500">
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
               Chiamata attiva
             </div>
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={handleEndCall}
-              disabled={isEndingCall}
-              className="gap-2"
-            >
-              <PhoneOff className="w-4 h-4" />
-              {isEndingCall ? "Terminando..." : "Termina"}
-            </Button>
+            <div className="flex items-center gap-2">
+              <LiveCallAudio listenUrl={listenUrl} />
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleEndCall}
+                disabled={isEndingCall}
+                className="gap-2"
+              >
+                <PhoneOff className="w-4 h-4" />
+                {isEndingCall ? "Terminando..." : "Termina"}
+              </Button>
+            </div>
           </div>
         )}
       </CardContent>

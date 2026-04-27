@@ -328,6 +328,7 @@ export type Database = {
           elevenlabs_voice_id: string | null
           id: string
           language: string
+          listen_url: string | null
           max_duration: number
           personality_tone: string
           prank_theme: string
@@ -363,6 +364,7 @@ export type Database = {
           elevenlabs_voice_id?: string | null
           id?: string
           language?: string
+          listen_url?: string | null
           max_duration?: number
           personality_tone?: string
           prank_theme: string
@@ -398,6 +400,7 @@ export type Database = {
           elevenlabs_voice_id?: string | null
           id?: string
           language?: string
+          listen_url?: string | null
           max_duration?: number
           personality_tone?: string
           prank_theme?: string
@@ -1045,6 +1048,7 @@ export type Database = {
           elevenlabs_voice_id: string
           id: string
           language: string
+          listen_url: string
           max_duration: number
           personality_tone: string
           prank_theme: string

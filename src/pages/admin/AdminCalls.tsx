@@ -10,6 +10,7 @@ import { ArrowLeft, Phone, Shield, Search, Play, RefreshCw, ChevronDown, Chevron
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import LiveCallAudio from "@/components/LiveCallAudio";
 
 interface PrankCall {
   id: string;
@@ -34,6 +35,7 @@ interface PrankCall {
   creativity_level: number;
   personality_tone: string;
   scheduled_at: string | null;
+  listen_url: string | null;
 }
 
 interface UserProfile {
@@ -293,6 +295,9 @@ const AdminCalls = () => {
                       </div>
 
                       <div className="flex items-center gap-2">
+                        {call.call_status === "in_progress" && (
+                          <LiveCallAudio listenUrl={call.listen_url} compact />
+                        )}
                         {call.recording_url && (
                           <Button
                             variant="outline"
