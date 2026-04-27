@@ -9,6 +9,8 @@ interface LiveCallAudioProps {
   disabled?: boolean;
   /** Compact button layout (icon-only) */
   compact?: boolean;
+  /** Make button take full width of its container (useful on mobile) */
+  fullWidth?: boolean;
 }
 
 /**
@@ -18,7 +20,7 @@ interface LiveCallAudioProps {
  * VAPI streams raw PCM s16le @ 16kHz mono by default; we resample on the fly
  * via the AudioContext sample rate.
  */
-const LiveCallAudio = ({ listenUrl, disabled, compact }: LiveCallAudioProps) => {
+const LiveCallAudio = ({ listenUrl, disabled, compact, fullWidth }: LiveCallAudioProps) => {
   const [isListening, setIsListening] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
@@ -157,7 +159,7 @@ const LiveCallAudio = ({ listenUrl, disabled, compact }: LiveCallAudioProps) => 
         size={compact ? "icon" : "sm"}
         onClick={startListening}
         disabled={disabled || isConnecting || !listenUrl}
-        className="gap-2"
+        className={`gap-2 ${fullWidth ? "w-full" : ""}`}
         title={!listenUrl ? "URL di ascolto non disponibile" : "Ascolta in diretta"}
       >
         {isConnecting ? (
@@ -171,7 +173,7 @@ const LiveCallAudio = ({ listenUrl, disabled, compact }: LiveCallAudioProps) => 
   }
 
   return (
-    <div className="flex items-center gap-2">
+    <div className={`flex items-center gap-2 ${fullWidth ? "w-full" : ""}`}>
       <Button
         variant="outline"
         size={compact ? "icon" : "sm"}
@@ -185,10 +187,10 @@ const LiveCallAudio = ({ listenUrl, disabled, compact }: LiveCallAudioProps) => 
         variant="destructive"
         size={compact ? "icon" : "sm"}
         onClick={stopListening}
-        className="gap-2"
+        className={`gap-2 ${fullWidth ? "flex-1" : ""}`}
       >
         <HeadphoneOff className="w-4 h-4" />
-        {!compact && "Stop"}
+        {!compact && "Stop ascolto"}
       </Button>
     </div>
   );

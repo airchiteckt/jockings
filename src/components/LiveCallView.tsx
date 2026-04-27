@@ -240,24 +240,24 @@ const LiveCallView = ({ prankId, victimName, callStatus: initialCallStatus, onCl
           )}
         </div>
 
-        {/* Active call indicator and End Call button */}
+        {/* Active call indicator and action buttons */}
         {isCallActive && (
-          <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+          <div className="mt-3 space-y-3">
             <div className="flex items-center gap-2 text-xs text-green-500">
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
               Chiamata attiva
             </div>
-            <div className="flex items-center gap-2">
-              <LiveCallAudio listenUrl={listenUrl} />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <LiveCallAudio listenUrl={listenUrl} fullWidth />
               <Button
                 variant="destructive"
                 size="sm"
                 onClick={handleEndCall}
                 disabled={isEndingCall}
-                className="gap-2"
+                className="gap-2 w-full"
               >
                 <PhoneOff className="w-4 h-4" />
-                {isEndingCall ? "Terminando..." : "Termina"}
+                {isEndingCall ? "Terminando..." : "Termina chiamata"}
               </Button>
             </div>
           </div>
