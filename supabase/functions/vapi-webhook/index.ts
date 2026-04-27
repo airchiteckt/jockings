@@ -236,6 +236,24 @@ serve(async (req) => {
 
     const messageType = body.message?.type;
     const callId = body.message?.call?.id;
+    const monitorListenUrl = body.message?.call?.monitor?.listenUrl;
+
+    // Persist listen_url as fallback (in case it wasn't captured at initiate time)
+    if (monitorListenUrl && (metadataPrankId || callId)) {
+      try {
+        const query = supabase.from("pranks").update({ listen_url: monitorListenUrl });
+        const { error: listenUrlErr } = metadataPrankId
+          ? await query.eq("id", metadataPrankId).is("listen_url", null)
+          : await query.eq("twilio_call_sid", callId).is("listen_url", null);
+        if (listenUrlErr) {
+          console.error("Failed to backfill listen_url:", listenUrlErr);
+        } else {
+          console.log("Backfilled listen_url from webhook event");
+        }
+      } catch (e) {
+        console.error("listen_url backfill error:", e);
+      }
+    }
 
     // Handle live transcript updates during the call
     // VAPI sends transcript in both "transcript" events and "status-update" events
