@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Phone, PhoneOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import AudioWaveAnimation from "./AudioWaveAnimation";
+import LiveCallAudio from "./LiveCallAudio";
 import { toast } from "sonner";
 
 interface TranscriptMessage {
