@@ -58,6 +58,10 @@ const LiveCallView = ({ prankId, victimName, callStatus: initialCallStatus, onCl
         }
       }
 
+      if ((data as any).listen_url) {
+        setListenUrl((data as any).listen_url);
+      }
+
       if (data.conversation_history && Array.isArray(data.conversation_history)) {
         const messages = data.conversation_history as unknown as TranscriptMessage[];
         setTranscript(messages);
