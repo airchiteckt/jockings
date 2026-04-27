@@ -29,10 +29,49 @@ const LiveCallAudio = ({ listenUrl, disabled, compact, fullWidth }: LiveCallAudi
   const audioContextRef = useRef<AudioContext | null>(null);
   const gainNodeRef = useRef<GainNode | null>(null);
   const nextStartTimeRef = useRef<number>(0);
+  const connectionTimeoutRef = useRef<number | null>(null);
 
   const SAMPLE_RATE = 16000; // VAPI default for listenUrl
 
+  const clearConnectionTimeout = () => {
+    if (connectionTimeoutRef.current) {
+      window.clearTimeout(connectionTimeoutRef.current);
+      connectionTimeoutRef.current = null;
+    }
+  };
+
+  const resamplePcmChunk = (buffer: ArrayBuffer, inputRate: number, outputRate: number) => {
+    const view = new DataView(buffer);
+    const inputLength = buffer.byteLength / 2;
+    const source = new Float32Array(inputLength);
+
+    for (let i = 0; i < inputLength; i++) {
+      source[i] = view.getInt16(i * 2, true) / 32768;
+    }
+
+    if (inputRate === outputRate) {
+      return source;
+    }
+
+    const outputLength = Math.max(1, Math.round((inputLength * outputRate) / inputRate));
+    const resampled = new Float32Array(outputLength);
+    const ratio = inputRate / outputRate;
+
+    for (let i = 0; i < outputLength; i++) {
+      const position = i * ratio;
+      const index = Math.floor(position);
+      const nextIndex = Math.min(index + 1, inputLength - 1);
+      const fraction = position - index;
+
+      resampled[i] = source[index] + (source[nextIndex] - source[index]) * fraction;
+    }
+
+    return resampled;
+  };
+
   const stopListening = () => {
+    clearConnectionTimeout();
+
     try {
       wsRef.current?.close();
     } catch {}
@@ -63,9 +102,10 @@ const LiveCallAudio = ({ listenUrl, disabled, compact, fullWidth }: LiveCallAudi
     setIsConnecting(true);
 
     try {
-      // AudioContext at the stream's sample rate so playback is at correct pitch
+      // Use the device default output sample rate for best Safari/iOS compatibility.
+      // We resample the incoming 16kHz PCM stream before playback.
       const AudioCtx = (window.AudioContext || (window as any).webkitAudioContext) as typeof AudioContext;
-      const ctx = new AudioCtx({ sampleRate: SAMPLE_RATE });
+      const ctx = new AudioCtx({ latencyHint: "interactive" });
       audioContextRef.current = ctx;
       const gain = ctx.createGain();
       gain.gain.value = isMuted ? 0 : 1;
@@ -74,15 +114,30 @@ const LiveCallAudio = ({ listenUrl, disabled, compact, fullWidth }: LiveCallAudi
 
       // Resume on user gesture (Safari/iOS)
       if (ctx.state === "suspended") {
-        await ctx.resume();
+        await Promise.race([
+          ctx.resume(),
+          new Promise((_, reject) => {
+            window.setTimeout(() => reject(new Error("resume-timeout")), 1500);
+          }),
+        ]).catch((error) => {
+          console.warn("[LiveCallAudio] AudioContext resume warning:", error);
+        });
       }
 
       const ws = new WebSocket(listenUrl);
       ws.binaryType = "arraybuffer";
       wsRef.current = ws;
 
+      clearConnectionTimeout();
+      connectionTimeoutRef.current = window.setTimeout(() => {
+        console.error("[LiveCallAudio] WS connection timeout");
+        toast.error("Connessione audio non riuscita. Riprova toccando di nuovo.");
+        stopListening();
+      }, 8000);
+
       ws.onopen = () => {
         console.log("[LiveCallAudio] WS connected");
+        clearConnectionTimeout();
         setIsConnecting(false);
         setIsListening(true);
         nextStartTimeRef.current = ctx.currentTime + 0.1; // small jitter buffer
@@ -103,16 +158,14 @@ const LiveCallAudio = ({ listenUrl, disabled, compact, fullWidth }: LiveCallAudi
         const buffer = event.data as ArrayBuffer;
         if (!buffer || buffer.byteLength === 0) return;
 
-        // PCM s16le -> Float32
-        const view = new DataView(buffer);
-        const sampleCount = buffer.byteLength / 2;
-        const float32 = new Float32Array(sampleCount);
-        for (let i = 0; i < sampleCount; i++) {
-          const int16 = view.getInt16(i * 2, true);
-          float32[i] = int16 / 32768;
+        if (ctx.state !== "running") {
+          ctx.resume().catch((error) => {
+            console.warn("[LiveCallAudio] resume before playback warning:", error);
+          });
         }
 
-        const audioBuffer = ctx.createBuffer(1, sampleCount, SAMPLE_RATE);
+        const float32 = resamplePcmChunk(buffer, SAMPLE_RATE, ctx.sampleRate);
+        const audioBuffer = ctx.createBuffer(1, float32.length, ctx.sampleRate);
         audioBuffer.getChannelData(0).set(float32);
 
         const source = ctx.createBufferSource();
@@ -129,12 +182,14 @@ const LiveCallAudio = ({ listenUrl, disabled, compact, fullWidth }: LiveCallAudi
 
       ws.onerror = (err) => {
         console.error("[LiveCallAudio] WS error:", err);
+        clearConnectionTimeout();
         toast.error("Errore di connessione audio");
         stopListening();
       };
 
       ws.onclose = () => {
         console.log("[LiveCallAudio] WS closed");
+        clearConnectionTimeout();
         stopListening();
       };
     } catch (e: any) {
