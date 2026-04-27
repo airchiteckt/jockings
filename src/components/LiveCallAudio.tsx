@@ -30,8 +30,8 @@ const LiveCallAudio = ({ listenUrl, disabled, compact, fullWidth }: LiveCallAudi
   const gainNodeRef = useRef<GainNode | null>(null);
   const nextStartTimeRef = useRef<number>(0);
   const connectionTimeoutRef = useRef<number | null>(null);
-
-  const SAMPLE_RATE = 16000; // VAPI default for listenUrl
+  const inputSampleRateRef = useRef<number>(16000);
+  const inputChannelsRef = useRef<number>(1);
 
   const clearConnectionTimeout = () => {
     if (connectionTimeoutRef.current) {
@@ -40,33 +40,51 @@ const LiveCallAudio = ({ listenUrl, disabled, compact, fullWidth }: LiveCallAudi
     }
   };
 
-  const resamplePcmChunk = (buffer: ArrayBuffer, inputRate: number, outputRate: number) => {
+  /**
+   * Decode raw PCM s16le buffer into one Float32Array per channel.
+   * Handles interleaved stereo (or any channel count) and resamples each
+   * channel independently from inputRate to outputRate.
+   */
+  const decodePcmChunk = (
+    buffer: ArrayBuffer,
+    channels: number,
+    inputRate: number,
+    outputRate: number,
+  ): Float32Array[] => {
     const view = new DataView(buffer);
-    const inputLength = buffer.byteLength / 2;
-    const source = new Float32Array(inputLength);
+    const totalSamples = buffer.byteLength / 2;
+    const framesIn = Math.floor(totalSamples / channels);
 
-    for (let i = 0; i < inputLength; i++) {
-      source[i] = view.getInt16(i * 2, true) / 32768;
+    // Deinterleave
+    const sources: Float32Array[] = [];
+    for (let c = 0; c < channels; c++) {
+      sources.push(new Float32Array(framesIn));
+    }
+    for (let f = 0; f < framesIn; f++) {
+      for (let c = 0; c < channels; c++) {
+        const sampleIndex = f * channels + c;
+        sources[c][f] = view.getInt16(sampleIndex * 2, true) / 32768;
+      }
     }
 
     if (inputRate === outputRate) {
-      return source;
+      return sources;
     }
 
-    const outputLength = Math.max(1, Math.round((inputLength * outputRate) / inputRate));
-    const resampled = new Float32Array(outputLength);
+    // Linear resample per channel
+    const framesOut = Math.max(1, Math.round((framesIn * outputRate) / inputRate));
     const ratio = inputRate / outputRate;
-
-    for (let i = 0; i < outputLength; i++) {
-      const position = i * ratio;
-      const index = Math.floor(position);
-      const nextIndex = Math.min(index + 1, inputLength - 1);
-      const fraction = position - index;
-
-      resampled[i] = source[index] + (source[nextIndex] - source[index]) * fraction;
-    }
-
-    return resampled;
+    return sources.map((src) => {
+      const out = new Float32Array(framesOut);
+      for (let i = 0; i < framesOut; i++) {
+        const position = i * ratio;
+        const index = Math.floor(position);
+        const nextIndex = Math.min(index + 1, framesIn - 1);
+        const fraction = position - index;
+        out[i] = src[index] + (src[nextIndex] - src[index]) * fraction;
+      }
+      return out;
+    });
   };
 
   const stopListening = () => {
