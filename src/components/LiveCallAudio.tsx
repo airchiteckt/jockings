@@ -20,7 +20,7 @@ interface LiveCallAudioProps {
  * VAPI streams raw PCM s16le @ 16kHz mono by default; we resample on the fly
  * via the AudioContext sample rate.
  */
-const LiveCallAudio = ({ listenUrl, disabled, compact }: LiveCallAudioProps) => {
+const LiveCallAudio = ({ listenUrl, disabled, compact, fullWidth }: LiveCallAudioProps) => {
   const [isListening, setIsListening] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
