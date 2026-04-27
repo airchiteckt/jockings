@@ -159,7 +159,7 @@ const LiveCallAudio = ({ listenUrl, disabled, compact, fullWidth }: LiveCallAudi
         size={compact ? "icon" : "sm"}
         onClick={startListening}
         disabled={disabled || isConnecting || !listenUrl}
-        className="gap-2"
+        className={`gap-2 ${fullWidth ? "w-full" : ""}`}
         title={!listenUrl ? "URL di ascolto non disponibile" : "Ascolta in diretta"}
       >
         {isConnecting ? (
@@ -173,7 +173,7 @@ const LiveCallAudio = ({ listenUrl, disabled, compact, fullWidth }: LiveCallAudi
   }
 
   return (
-    <div className="flex items-center gap-2">
+    <div className={`flex items-center gap-2 ${fullWidth ? "w-full" : ""}`}>
       <Button
         variant="outline"
         size={compact ? "icon" : "sm"}
@@ -187,10 +187,10 @@ const LiveCallAudio = ({ listenUrl, disabled, compact, fullWidth }: LiveCallAudi
         variant="destructive"
         size={compact ? "icon" : "sm"}
         onClick={stopListening}
-        className="gap-2"
+        className={`gap-2 ${fullWidth ? "flex-1" : ""}`}
       >
         <HeadphoneOff className="w-4 h-4" />
-        {!compact && "Stop"}
+        {!compact && "Stop ascolto"}
       </Button>
     </div>
   );
