@@ -297,7 +297,7 @@ const Dashboard = () => {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-bold text-sm sm:text-base text-foreground">
-                  Offerta Lancio: <span className="text-secondary">-50%</span> su tutti i pacchetti!
+                  Offerta Lancio: <span className="text-secondary">-30%</span> su tutti i pacchetti!
                 </p>
                 <p className="text-xs text-muted-foreground mt-0.5">
                   {!profile?.trial_prank_used
