@@ -26,6 +26,7 @@ const LiveCallView = ({ prankId, victimName, callStatus: initialCallStatus, onCl
   const [isAISpeaking, setIsAISpeaking] = useState(false);
   const [isEndingCall, setIsEndingCall] = useState(false);
   const [callStatus, setCallStatus] = useState(initialCallStatus);
+  const [listenUrl, setListenUrl] = useState<string | null>(null);
 
   useEffect(() => {
     let pollIntervalId: number | null = null;
