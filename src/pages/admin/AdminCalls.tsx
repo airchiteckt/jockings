@@ -10,6 +10,7 @@ import { ArrowLeft, Phone, Shield, Search, Play, RefreshCw, ChevronDown, Chevron
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import LiveCallAudio from "@/components/LiveCallAudio";
 
 interface PrankCall {
   id: string;
