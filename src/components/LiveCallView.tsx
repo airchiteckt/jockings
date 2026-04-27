@@ -93,10 +93,15 @@ const LiveCallView = ({ prankId, victimName, callStatus: initialCallStatus, onCl
           const newData = payload.new as {
             conversation_history?: unknown[];
             call_status?: string;
+            listen_url?: string | null;
           };
 
           if (newData.call_status) {
             setCallStatus(newData.call_status);
+          }
+
+          if (newData.listen_url) {
+            setListenUrl(newData.listen_url);
           }
 
           if (
