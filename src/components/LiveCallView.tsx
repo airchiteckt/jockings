@@ -37,7 +37,7 @@ const LiveCallView = ({ prankId, victimName, callStatus: initialCallStatus, onCl
     const fetchLatest = async () => {
       const { data, error } = await supabase
         .from("pranks")
-        .select("conversation_history, call_status")
+        .select("conversation_history, call_status, listen_url")
         .eq("id", prankId)
         .maybeSingle();
 
