@@ -35,6 +35,7 @@ interface PrankCall {
   creativity_level: number;
   personality_tone: string;
   scheduled_at: string | null;
+  listen_url: string | null;
 }
 
 interface UserProfile {
