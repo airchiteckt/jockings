@@ -34,7 +34,7 @@ const PostTrialModal = ({ open, onClose }: PostTrialModalProps) => {
         <div className="p-5 sm:p-6 space-y-4">
           <p className="text-center text-sm text-muted-foreground">
             Continua a divertirti con i tuoi amici! Scegli un pacchetto con lo 
-            <span className="font-bold text-secondary"> sconto lancio del 50%</span>.
+            <span className="font-bold text-secondary"> sconto lancio del 30%</span>.
           </p>
 
           {/* Quick packages */}

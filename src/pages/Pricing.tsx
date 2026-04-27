@@ -24,7 +24,7 @@ interface PromoCodeInfo {
   id: string;
 }
 
-const LAUNCH_DISCOUNT = 0.5; // 50% off
+const LAUNCH_DISCOUNT = 0.3; // 30% off
 
 // Returns the next 7:00 AM (Europe/Rome) as the countdown target
 function getNextResetDate(): Date {
@@ -242,7 +242,7 @@ const Pricing = () => {
         {/* Hero */}
         <div className="text-center space-y-2">
           <div className="inline-flex items-center gap-2 bg-secondary/10 text-secondary px-4 py-1.5 rounded-full text-sm font-semibold">
-            🔥 Offerta Lancio: -50% su tutto!
+            🔥 Offerta Lancio: -30% su tutto!
           </div>
           <h2 className="text-2xl font-bold text-foreground">Scegli il tuo pacchetto</h2>
           <p className="text-muted-foreground">
