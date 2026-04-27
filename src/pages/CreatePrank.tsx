@@ -115,6 +115,8 @@ const CreatePrank = () => {
   const [pendingPrankId, setPendingPrankId] = useState<string | null>(null);
   const [contentCheckLoading, setContentCheckLoading] = useState(false);
   const [contentBlocked, setContentBlocked] = useState<{ blocked: boolean; message: string; category?: string } | null>(null);
+  const submitLockedRef = useRef(false);
+  const confirmLockedRef = useRef(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -502,6 +504,7 @@ const CreatePrank = () => {
   };
 
   const handleSubmit = async () => {
+    if (submitLockedRef.current || loading || pendingPrankId) return;
     if (!user || !profile) return;
 
     // Check if user can make this prank
@@ -521,6 +524,7 @@ const CreatePrank = () => {
       return;
     }
 
+    submitLockedRef.current = true;
     setLoading(true);
 
     try {
@@ -575,16 +579,19 @@ const CreatePrank = () => {
     } catch (error: any) {
       toast({ title: "Errore", description: error.message, variant: "destructive" });
     } finally {
+      submitLockedRef.current = false;
       setLoading(false);
     }
   };
 
   const handleDisclaimerConfirm = async () => {
-    if (!pendingPrankId || !user || !profile) return;
+    if (confirmLockedRef.current || !pendingPrankId || !user || !profile) return;
+    const prankId = pendingPrankId;
 
     const prankCheck = canMakePrank();
     const isTrialCall = prankCheck.isTrialCall;
 
+    confirmLockedRef.current = true;
     setLoading(true);
     try {
       toast({
@@ -593,7 +600,7 @@ const CreatePrank = () => {
       });
 
       const { error: callError } = await supabase.functions.invoke("initiate-call-vapi", {
-        body: { prankId: pendingPrankId }
+        body: { prankId }
       });
 
       if (callError) {
@@ -601,7 +608,7 @@ const CreatePrank = () => {
         await supabase
           .from("pranks")
           .update({ call_status: "failed" })
-          .eq("id", pendingPrankId);
+          .eq("id", prankId);
         
         toast({
           title: "Errore chiamata",
@@ -617,12 +624,14 @@ const CreatePrank = () => {
           description: `Stiamo chiamando ${victimFirstName}...`,
         });
       }
-      
+
+      setPendingPrankId(null);
       setShowDisclaimerModal(false);
-      navigate(`/prank/${pendingPrankId}`);
+      navigate(`/prank/${prankId}`);
     } catch (error: any) {
       toast({ title: "Errore", description: error.message, variant: "destructive" });
     } finally {
+      confirmLockedRef.current = false;
       setLoading(false);
     }
   };
@@ -1203,6 +1212,9 @@ const CreatePrank = () => {
             // If modal is closed without confirming, delete the pending prank
             supabase.from("pranks").delete().eq("id", pendingPrankId);
             setPendingPrankId(null);
+          }
+          if (!open) {
+            confirmLockedRef.current = false;
           }
         }}
         onConfirm={handleDisclaimerConfirm}
