@@ -135,13 +135,17 @@ export function extractNationalDigits(
   countryDialCode: string
 ): { dialCode: string; nationalDigits: string } {
   const isoCountry = DIAL_TO_ISO[countryDialCode];
-  const parsed = parsePhoneNumberFromString(fullPhone, isoCountry);
-  if (parsed) {
-    const detectedDial = "+" + parsed.countryCallingCode;
-    return {
-      dialCode: detectedDial in DIAL_TO_ISO ? detectedDial : countryDialCode,
-      nationalDigits: parsed.nationalNumber.toString(),
-    };
+  try {
+    const parsed = parsePhoneNumberFromString(fullPhone, isoCountry);
+    if (parsed) {
+      const detectedDial = "+" + parsed.countryCallingCode;
+      return {
+        dialCode: detectedDial in DIAL_TO_ISO ? detectedDial : countryDialCode,
+        nationalDigits: parsed.nationalNumber.toString(),
+      };
+    }
+  } catch (err) {
+    console.warn("extractNationalDigits parse error", err);
   }
   // Fallback: vecchia logica string-replace
   const stripped = fullPhone.startsWith(countryDialCode)
