@@ -86,27 +86,38 @@ export function normalizeE164(
   }
 
   // Prova ogni candidata: la prima valida vince.
+  // Wrappiamo in try/catch perché libphonenumber-js può lanciare eccezioni
+  // su input parziali in alcuni browser (es. iOS 26 WebKit), causando white-screen.
   for (const candidate of candidates) {
-    const parsed = parsePhoneNumberFromString(candidate, isoCountry);
-    if (parsed && parsed.isValid()) {
-      return {
-        e164: parsed.number, // E.164
-        formatted: parsed.formatInternational(),
-        isValid: true,
-        nationalDigits: parsed.nationalNumber.toString(),
-      };
+    try {
+      const parsed = parsePhoneNumberFromString(candidate, isoCountry);
+      if (parsed && parsed.isValid()) {
+        return {
+          e164: parsed.number,
+          formatted: parsed.formatInternational(),
+          isValid: true,
+          nationalDigits: parsed.nationalNumber.toString(),
+        };
+      }
+    } catch (err) {
+      // Ignora e prova la prossima candidata
+      console.warn("phone parse error", err);
     }
   }
 
   // Nessuna candidata valida — proviamo comunque a fornire un best-effort
   // per permettere alla UI di mostrare cosa abbiamo interpretato.
-  const fallback = parsePhoneNumberFromString(candidates[0], isoCountry);
-  return {
-    e164: null,
-    formatted: fallback?.formatInternational() ?? null,
-    isValid: false,
-    nationalDigits: fallback?.nationalNumber?.toString() ?? null,
-  };
+  try {
+    const fallback = parsePhoneNumberFromString(candidates[0], isoCountry);
+    return {
+      e164: null,
+      formatted: fallback?.formatInternational() ?? null,
+      isValid: false,
+      nationalDigits: fallback?.nationalNumber?.toString() ?? null,
+    };
+  } catch {
+    return empty;
+  }
 }
 
 /** Shortcut: ritorna true se il numero risulta valido. */
@@ -124,13 +135,17 @@ export function extractNationalDigits(
   countryDialCode: string
 ): { dialCode: string; nationalDigits: string } {
   const isoCountry = DIAL_TO_ISO[countryDialCode];
-  const parsed = parsePhoneNumberFromString(fullPhone, isoCountry);
-  if (parsed) {
-    const detectedDial = "+" + parsed.countryCallingCode;
-    return {
-      dialCode: detectedDial in DIAL_TO_ISO ? detectedDial : countryDialCode,
-      nationalDigits: parsed.nationalNumber.toString(),
-    };
+  try {
+    const parsed = parsePhoneNumberFromString(fullPhone, isoCountry);
+    if (parsed) {
+      const detectedDial = "+" + parsed.countryCallingCode;
+      return {
+        dialCode: detectedDial in DIAL_TO_ISO ? detectedDial : countryDialCode,
+        nationalDigits: parsed.nationalNumber.toString(),
+      };
+    }
+  } catch (err) {
+    console.warn("extractNationalDigits parse error", err);
   }
   // Fallback: vecchia logica string-replace
   const stripped = fullPhone.startsWith(countryDialCode)
