@@ -480,7 +480,13 @@ serve(async (req) => {
         && endedReason !== "customer-busy"
         && endedReason !== "busy";
       
-      const isFailed = endedReason?.includes("error") || endedReason?.includes("failed");
+      // Treat provider/telephony failures as failed (e.g. Twilio auth error → VAPI returns "call-deleted")
+      const isFailed = endedReason?.includes("error")
+        || endedReason?.includes("failed")
+        || endedReason === "call-deleted"
+        || endedReason === "twilio-failed-to-connect-call"
+        || endedReason === "pipeline-error-twilio-failed-to-connect-call"
+        || endedReason === "provider-failure";
       
       console.log("Report Call ID:", reportCallId);
       console.log("Recording URL:", recordingUrl);
@@ -695,7 +701,14 @@ serve(async (req) => {
           newStatus = "busy";
         } else if (endReason === "customer-ended-call" || endReason === "assistant-ended-call" || endReason === "max-duration-reached") {
           newStatus = "completed";
-        } else if (endReason?.includes("error") || endReason?.includes("failed")) {
+        } else if (
+          endReason?.includes("error")
+          || endReason?.includes("failed")
+          || endReason === "call-deleted"
+          || endReason === "twilio-failed-to-connect-call"
+          || endReason === "pipeline-error-twilio-failed-to-connect-call"
+          || endReason === "provider-failure"
+        ) {
           newStatus = "failed";
         } else {
           newStatus = "completed";
