@@ -701,7 +701,14 @@ serve(async (req) => {
           newStatus = "busy";
         } else if (endReason === "customer-ended-call" || endReason === "assistant-ended-call" || endReason === "max-duration-reached") {
           newStatus = "completed";
-        } else if (endReason?.includes("error") || endReason?.includes("failed")) {
+        } else if (
+          endReason?.includes("error")
+          || endReason?.includes("failed")
+          || endReason === "call-deleted"
+          || endReason === "twilio-failed-to-connect-call"
+          || endReason === "pipeline-error-twilio-failed-to-connect-call"
+          || endReason === "provider-failure"
+        ) {
           newStatus = "failed";
         } else {
           newStatus = "completed";
